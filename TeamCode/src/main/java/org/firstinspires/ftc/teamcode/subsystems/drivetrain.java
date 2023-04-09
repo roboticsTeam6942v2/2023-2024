@@ -106,7 +106,7 @@ public class drivetrain extends subsystem{
     public int inTT (double inches){
         // to calculate distance
         double diameter=4;
-        int motor_ratio=20;
+        int motor_ratio=40;
         int gear_ratio=1;
         // assuming its a hall effect encoder then *28 accounts for the rises and falls for the channels
         return (int) Math.round(((motor_ratio*gear_ratio * 28)/(diameter*Math.PI))*inches);
