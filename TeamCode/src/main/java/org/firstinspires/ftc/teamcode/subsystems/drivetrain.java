@@ -9,7 +9,7 @@ public class drivetrain extends subsystem{
     DcMotor frontLeft,frontRight,backLeft,backRight;
 
     public drivetrain(HardwareMap hwMap) {
-        frontLeft = hwMap.get(DcMotor.class, "leftFront"); //See configuration Google doc
+        frontLeft = hwMap.get(DcMotor.class, "leftFront");
         frontRight = hwMap.get(DcMotor.class, "leftRear");
         backLeft = hwMap.get(DcMotor.class, "rightFront");
         backRight = hwMap.get(DcMotor.class, "leftRear");
