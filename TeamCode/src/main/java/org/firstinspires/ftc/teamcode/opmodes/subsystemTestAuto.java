@@ -35,7 +35,7 @@ public class subsystemTestAuto extends LinearOpMode {
 
             stage = "end of autonomous";
             while (stage.equals("end of autonomous")) {
-                sleep(1);
+                robot.drivetrain.maintainHeading();
             }
         }
     }
