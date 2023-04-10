@@ -19,7 +19,7 @@ public class drivetrain extends subsystem{
         backRight.setDirection(DcMotor.Direction.REVERSE);
         frontRight.setDirection(DcMotor.Direction.REVERSE);
     }
-    public void mSP (String m, double p) {
+    public void SP (String m, double p) {
         switch(m){
             case"fl":frontLeft.setPower(p);break;
             case"fr":frontRight.setPower(p);break;
@@ -33,7 +33,7 @@ public class drivetrain extends subsystem{
         }
     }
 
-    public void mSTP (String m, int tp) {
+    public void STP (String m, int tp) {
         switch(m){
             case"fl":frontLeft.setTargetPosition(tp);break;
             case"fr":frontRight.setTargetPosition(tp);break;
@@ -47,7 +47,7 @@ public class drivetrain extends subsystem{
         }
     }
 
-    public void mRTP (String m) {
+    public void RTP (String m) {
         switch(m){
             case"fl":frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);break;
             case"fr":frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);break;
@@ -61,7 +61,7 @@ public class drivetrain extends subsystem{
         }
     }
 
-    public void mSAR (String m) {
+    public void SAR (String m) {
         switch(m){
             case"fl":frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);break;
             case"fr":frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);break;
@@ -75,7 +75,7 @@ public class drivetrain extends subsystem{
         }
     }
 
-    public void mRWE (String m) {
+    public void RWE (String m) {
         switch(m){
             case"fl":frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);break;
             case"fr":frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);break;
@@ -89,7 +89,7 @@ public class drivetrain extends subsystem{
         }
     }
 
-    public void mRUE (String m) {
+    public void RUE (String m) {
         switch(m){
             case"fl":frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);break;
             case"fr":frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);break;
@@ -113,74 +113,74 @@ public class drivetrain extends subsystem{
     }
 
     public void drive (String direction, double inches, double speed){
-        mSAR("dt");
+        SAR("dt");
         switch(direction){
             case"forward":
-                mSTP("dt",inTT(inches));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("dt",inTT(inches));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
             case"backwards":
-                mSTP("dt",inTT(-inches));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("dt",inTT(-inches));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
             case"left":
-                mSTP("fl",inTT(-inches));
-                mSTP("fr",inTT(inches));
-                mSTP("bl",inTT(inches));
-                mSTP("br",inTT(-inches));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("fl",inTT(-inches));
+                STP("fr",inTT(inches));
+                STP("bl",inTT(inches));
+                STP("br",inTT(-inches));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
             case"right":
-                mSTP("fl",inTT(inches));
-                mSTP("fr",inTT(-inches));
-                mSTP("bl",inTT(-inches));
-                mSTP("br",inTT(inches));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("fl",inTT(inches));
+                STP("fr",inTT(-inches));
+                STP("bl",inTT(-inches));
+                STP("br",inTT(inches));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
             case"diagonal fr":
-                mSTP("fl",inTT(inches));
-                mSTP("fr",inTT(0));
-                mSTP("bl",inTT(0));
-                mSTP("br",inTT(inches));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("fl",inTT(inches));
+                STP("fr",inTT(0));
+                STP("bl",inTT(0));
+                STP("br",inTT(inches));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
             case"diagonal bl":
-                mSTP("fl",inTT(-inches));
-                mSTP("fr",inTT(0));
-                mSTP("bl",inTT(0));
-                mSTP("br",inTT(-inches));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("fl",inTT(-inches));
+                STP("fr",inTT(0));
+                STP("bl",inTT(0));
+                STP("br",inTT(-inches));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
             case"diagonal fl":
-                mSTP("fl",inTT(0));
-                mSTP("fr",inTT(inches));
-                mSTP("bl",inTT(inches));
-                mSTP("br",inTT(0));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("fl",inTT(0));
+                STP("fr",inTT(inches));
+                STP("bl",inTT(inches));
+                STP("br",inTT(0));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
             case"diagonal br":
-                mSTP("fl",inTT(0));
-                mSTP("fr",inTT(-inches));
-                mSTP("bl",inTT(-inches));
-                mSTP("br",inTT(0));
-                mSP("dt",speed);
-                mRTP("dt");
+                STP("fl",inTT(0));
+                STP("fr",inTT(-inches));
+                STP("bl",inTT(-inches));
+                STP("br",inTT(0));
+                SP("dt",speed);
+                RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
-                mSP("dt",0);
+                SP("dt",0);
         }
     }
 }
