@@ -18,7 +18,10 @@ public class drivetrain extends subsystem{
     DcMotor frontLeft,frontRight,backLeft,backRight;
     private BNO055IMU imu;
     private Orientation lastAngles = new Orientation();
-    double globalAngle, power = .30, correction, diameter=4;
+    double globalAngle;
+    public double power = .30;
+    double correction;
+    double diameter=4;
     int motor_ratio=40, gear_ratio=1;
 
     public drivetrain(HardwareMap hwMap) {
@@ -131,7 +134,7 @@ public class drivetrain extends subsystem{
         }
     }
 
-    public int inTT (double inches){
+    private int inTT (double inches){
         // to calculate distance
         // assuming its a hall effect encoder then *28 accounts for the rises and falls for the channels
         return (int) Math.round(((motor_ratio*gear_ratio * 28)/(diameter*Math.PI))*inches);
@@ -249,7 +252,8 @@ public class drivetrain extends subsystem{
         correction *= gain;
         return correction;
     }
-    private void rotate(int degrees, double power) {
+
+    public void rotate(int degrees, double power) {
         double  lp, rp; // left and right power
 
         // restart imu movement tracking.
@@ -285,5 +289,73 @@ public class drivetrain extends subsystem{
 
         // reset angle tracking on new heading.
         resetAngle();
+    }
+
+    public void maintainHeading(String direction) {
+        // must be called in a loop where it loops until a condition is met
+        // add correction for counterclock subtract for clock
+        // for diagonals it might be wise to add correction to the 0 power wheels (+ for right - for left)
+        // alternatively it might be wise to instead multiply the correction of the wheels in use
+        switch (direction){
+            case"f":
+                correction = checkDirection();
+                SP("l", (power - correction));
+                SP("r", (power + correction));
+                return;
+            case"b":
+                correction = checkDirection();
+                SP("l", (-power - correction));
+                SP("r", (-power + correction));
+                return;
+            case"l":
+                correction = checkDirection();
+                SP("fl",-power + correction);
+                SP("fr",power + correction);
+                SP("bl",power - correction);
+                SP("br",-power - correction);
+                return;
+            case"r":
+                correction = checkDirection();
+                SP("fl",power - correction);
+                SP("fr",-power - correction);
+                SP("bl",-power + correction);
+                SP("br",power + correction);
+                return;
+            case"fr":
+                correction = checkDirection();
+                SP("fl",power - correction);
+                SP("fr",0);
+                SP("bl",0);
+                SP("br",power + correction);
+                return;
+            case"bl":
+                correction = checkDirection();
+                SP("fl",-power - correction);
+                SP("fr",0);
+                SP("bl",0);
+                SP("br",-power + correction);
+                return;
+            case"fl":
+                correction = checkDirection();
+                SP("fl",0);
+                SP("fr",power + correction);
+                SP("bl",power - correction);
+                SP("br",0);
+                return;
+            case"br":
+                correction = checkDirection();
+                SP("fl",0);
+                SP("fr",-power + correction);
+                SP("bl",-power - correction);
+                SP("br",0);
+                return;
+            default: return;
+        }
+    }
+    public void maintainHeading() {
+        // might need to add a booster to correction
+        correction = checkDirection();
+        SP("l", (-correction));
+        SP("r", (correction));
     }
 }
