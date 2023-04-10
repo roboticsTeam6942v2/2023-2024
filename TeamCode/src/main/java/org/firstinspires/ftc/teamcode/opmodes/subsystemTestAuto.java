@@ -30,7 +30,7 @@ public class subsystemTestAuto extends LinearOpMode {
 
             stage = "rotating";
             // test possible rotation code
-            robot.drivetrain.rotate(-90, .5);
+            robot.drivetrain.rotateTest(-90, .5);
 
 
             stage = "end of autonomous";
