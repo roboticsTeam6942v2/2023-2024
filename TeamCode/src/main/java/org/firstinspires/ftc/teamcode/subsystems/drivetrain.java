@@ -249,7 +249,7 @@ public class drivetrain extends subsystem{
         return correction;
     }
 
-    public void rotate(int degrees, double power) {
+    public void rotateTest(int degrees, double power) {
         double  lp, rp; // left and right power
 
         // restart imu movement tracking.
@@ -350,6 +350,7 @@ public class drivetrain extends subsystem{
             default: return;
         }
     }
+
     public void maintainHeading() {
         // might need to add a booster to correction
         correction = checkDirection();
