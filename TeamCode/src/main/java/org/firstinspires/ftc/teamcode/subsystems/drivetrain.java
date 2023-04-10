@@ -232,10 +232,6 @@ public class drivetrain extends subsystem{
         return globalAngle;
     }
 
-    /**
-     * See if we are moving in a straight line and if not return a power correction value.
-     * @return Power adjustment, + is adjust left - is adjust right.
-     */
     private double checkDirection()
     {
         // The gain value determines how sensitive the correction is to direction changes.
@@ -293,6 +289,8 @@ public class drivetrain extends subsystem{
 
     public void maintainHeading(String direction) {
         // must be called in a loop where it loops until a condition is met
+        // see if we are moving in a straight line and if not return a power correction value
+        // power adjustment, + is adjust left - is adjust right
         // add correction for counterclock subtract for clock
         // for diagonals it might be wise to add correction to the 0 power wheels (+ for right - for left)
         // alternatively it might be wise to instead multiply the correction of the wheels in use
