@@ -1,18 +1,38 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import org.firstinspires.ftc.teamcode.libraries.subsystem;
 
 public class drivetrain extends subsystem{
     DcMotor frontLeft,frontRight,backLeft,backRight;
+    private BNO055IMU imu;
+    private Orientation angles;
+    private Acceleration gravity;
 
     public drivetrain(HardwareMap hwMap) {
         frontLeft = hwMap.get(DcMotor.class, "leftFront");
         frontRight = hwMap.get(DcMotor.class, "leftRear");
         backLeft = hwMap.get(DcMotor.class, "rightFront");
         backRight = hwMap.get(DcMotor.class, "leftRear");
+
+        //initializes gyro
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json";
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
+        imu = hwMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
 
         frontLeft.setDirection(DcMotor.Direction.FORWARD);
         backLeft.setDirection(DcMotor.Direction.FORWARD);
@@ -115,19 +135,19 @@ public class drivetrain extends subsystem{
     public void drive (String direction, double inches, double speed){
         SAR("dt");
         switch(direction){
-            case"forward":
+            case"f":
                 STP("dt",inTT(inches));
                 SP("dt",speed);
                 RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
-            case"backwards":
+            case"b":
                 STP("dt",inTT(-inches));
                 SP("dt",speed);
                 RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
-            case"left":
+            case"l":
                 STP("fl",inTT(-inches));
                 STP("fr",inTT(inches));
                 STP("bl",inTT(inches));
@@ -136,7 +156,7 @@ public class drivetrain extends subsystem{
                 RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
-            case"right":
+            case"r":
                 STP("fl",inTT(inches));
                 STP("fr",inTT(-inches));
                 STP("bl",inTT(-inches));
@@ -145,7 +165,7 @@ public class drivetrain extends subsystem{
                 RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
-            case"diagonal fr":
+            case"fr":
                 STP("fl",inTT(inches));
                 STP("fr",inTT(0));
                 STP("bl",inTT(0));
@@ -154,7 +174,7 @@ public class drivetrain extends subsystem{
                 RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
-            case"diagonal bl":
+            case"bl":
                 STP("fl",inTT(-inches));
                 STP("fr",inTT(0));
                 STP("bl",inTT(0));
@@ -163,7 +183,7 @@ public class drivetrain extends subsystem{
                 RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
-            case"diagonal fl":
+            case"fl":
                 STP("fl",inTT(0));
                 STP("fr",inTT(inches));
                 STP("bl",inTT(inches));
@@ -172,7 +192,7 @@ public class drivetrain extends subsystem{
                 RTP("dt");
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
-            case"diagonal br":
+            case"br":
                 STP("fl",inTT(0));
                 STP("fr",inTT(-inches));
                 STP("bl",inTT(-inches));
@@ -182,5 +202,15 @@ public class drivetrain extends subsystem{
                 while (frontLeft.isBusy() && frontRight.isBusy() && backLeft.isBusy() && backRight.isBusy()){}
                 SP("dt",0);
         }
+    }
+
+    public double[] getAngles(){
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        double[] anglearray = {angles.firstAngle, angles.secondAngle, angles.thirdAngle};
+        return anglearray;
+    }
+    public double getHeading(){
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        return angles.firstAngle;
     }
 }
