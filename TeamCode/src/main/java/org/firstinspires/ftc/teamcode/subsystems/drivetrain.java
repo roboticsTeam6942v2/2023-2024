@@ -232,11 +232,10 @@ public class drivetrain extends subsystem{
         return globalAngle;
     }
 
-    private double checkDirection()
-    {
-        // The gain value determines how sensitive the correction is to direction changes.
-        // You will have to experiment with your robot to get small smooth direction changes
-        // to stay on a straight line.
+    private double checkDirection() {
+        // the gain value determines how sensitive the correction is to direction changes.
+        // you will have to experiment with your robot to get small smooth direction changes to stay on a straight line
+        // maybe we can make it proportional
         double correction, angle, gain = .10;
         angle = getAngle();
 
@@ -356,5 +355,58 @@ public class drivetrain extends subsystem{
         correction = checkDirection();
         SP("l", (-correction));
         SP("r", (correction));
+    }
+
+    public void rotatePID(String direction, double degrees) {
+        double angle,target,currentError,previousError,accumulatedError,derivative,P,I,D,p;
+        previousError=accumulatedError=0;
+
+        P = 0; // increase until the robot oscillates
+        I = 0; // once p is "found" set this to around half
+        D = 0; // increase this to prevent overshoot
+
+        // basic rules for tuning
+        // p means youre going fast the further you are from your target
+        // i means if you hit a rough patch or arent getting to speed we increase power over time to get there
+        // d means depending on how big of a spike from the rate of change, we slow down to prevent overshoot
+        // the larger the spike the more it dampens, so if youve been slow on a bump and i gets high enough to pass the bump
+        // then all of a sudden in one loop youve moved 4x the degrees you normally do, d will spike up to slow you down so you dont overshoot
+
+        boolean reachedPosition = false;
+        // degrees pos and neg may need to be switched
+        // sets the target to the direction
+        switch (direction) {
+            case"l":
+                target = degrees;
+                while (!reachedPosition) {
+                    angle = getAngle();
+                    currentError = target - angle;
+                    accumulatedError += currentError;
+                    derivative = currentError - previousError;
+                    previousError = currentError;
+                    p = P * currentError + I * accumulatedError + D * derivative;
+                    SP("l", -p);
+                    SP("r", p);
+                    if (target>angle) { // may need to switch if it doesnt terminate
+                        reachedPosition = true;
+                    }
+                } SP("dt", 0); return; //SP is probably a bit repetitive here but id rather be safe
+            case"r":
+                target = -degrees;
+                while (!reachedPosition) {
+                    angle = getAngle();
+                    currentError = target - angle;
+                    accumulatedError += currentError;
+                    derivative = currentError - previousError;
+                    previousError = currentError;
+                    p = P * currentError + I * accumulatedError + D * derivative;
+                    SP("l", p);
+                    SP("r", -p);
+                    if (target<angle) { // may need to switch if it doesnt terminate
+                        reachedPosition = true;
+                    }
+                } SP("dt", 0); return; //SP is probably a bit repetitive here but id rather be safe
+            default: return;
+        }
     }
 }
