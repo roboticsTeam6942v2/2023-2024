@@ -15,10 +15,10 @@ public class lift extends subsystem {
     public lift(HardwareMap hwMap) {
         lift = hwMap.get(DcMotor.class, "liftMotor");
         lift.setDirection(DcMotor.Direction.FORWARD);
+        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         STP(0);
         SP(1);
         RTP();
-//        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //         lift.setTargetPositionTolerance(200);
     }
 
