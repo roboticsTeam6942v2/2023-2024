@@ -17,8 +17,9 @@ import org.firstinspires.ftc.teamcode.libraries.subsystem;
 public class drivetrain extends subsystem{
     DcMotor frontLeft,frontRight,backLeft,backRight;
     private BNO055IMU imu;
-    private Orientation angles;
-    private Acceleration gravity;
+    private Orientation lastAngles = new Orientation();
+    double globalAngle, power = .30, correction, diameter=4;
+    int motor_ratio=40, gear_ratio=1;
 
     public drivetrain(HardwareMap hwMap) {
         frontLeft = hwMap.get(DcMotor.class, "leftFront");
@@ -132,9 +133,6 @@ public class drivetrain extends subsystem{
 
     public int inTT (double inches){
         // to calculate distance
-        double diameter=4;
-        int motor_ratio=40;
-        int gear_ratio=1;
         // assuming its a hall effect encoder then *28 accounts for the rises and falls for the channels
         return (int) Math.round(((motor_ratio*gear_ratio * 28)/(diameter*Math.PI))*inches);
     }
@@ -211,13 +209,81 @@ public class drivetrain extends subsystem{
         }
     }
 
-    public double[] getAngles(){
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        double[] anglearray = {angles.firstAngle, angles.secondAngle, angles.thirdAngle};
-        return anglearray;
+    private void resetAngle() {
+        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        globalAngle = 0;
     }
-    public double getHeading(){
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        return angles.firstAngle;
+
+    private double getAngle() {
+        // imu works in eulear angles so we have to detect when it rolls accross the backwards 180 threshold
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        double change = angles.firstAngle - lastAngles.firstAngle;
+
+        if (change < -180) {
+            change += 360;
+        } else if (change > 180) {
+            change -= 360;
+        }
+        globalAngle += change;
+        lastAngles = angles;
+        return globalAngle;
+    }
+
+    /**
+     * See if we are moving in a straight line and if not return a power correction value.
+     * @return Power adjustment, + is adjust left - is adjust right.
+     */
+    private double checkDirection()
+    {
+        // The gain value determines how sensitive the correction is to direction changes.
+        // You will have to experiment with your robot to get small smooth direction changes
+        // to stay on a straight line.
+        double correction, angle, gain = .10;
+        angle = getAngle();
+
+        if (angle == 0) {
+            correction = 0; // no adjustment.
+        } else {
+            correction = -angle; // reverse sign of angle for correction since thats the angle we want to undo
+        }
+        correction *= gain;
+        return correction;
+    }
+    private void rotate(int degrees, double power) {
+        double  lp, rp; // left and right power
+
+        // restart imu movement tracking.
+        resetAngle();
+
+        // getAngle() returns + when rotating counter clockwise (left) and - when rotating clockwise (right)
+        if (degrees < 0) { // turn right.
+            lp = power; rp = -power;
+        } else if (degrees > 0) {   // turn left.
+            lp = -power; rp = power;
+        }
+        else return;
+
+        // set power to rotate.
+        SP("l",lp);
+        SP("r",rp);
+
+        // rotate until turn is completed.
+        if (degrees < 0) {
+            // on right turn we have to get off zero first.
+            while (getAngle() == 0) {}
+            while (getAngle() > degrees) {}
+        } else {
+            while (getAngle() < degrees) {}
+        }
+
+        // turn the motors off.
+        SP("r",0);
+        SP("l",0);
+
+        // wait for rotation to stop.
+        // sleep(1000);
+
+        // reset angle tracking on new heading.
+        resetAngle();
     }
 }
