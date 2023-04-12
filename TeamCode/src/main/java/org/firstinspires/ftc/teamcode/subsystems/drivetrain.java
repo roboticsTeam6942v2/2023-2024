@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static java.lang.Math.*;
+import static org.firstinspires.ftc.teamcode.subsystems.ease_commands.*;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import org.firstinspires.ftc.teamcode.subsystems.ease_commands;
+
+import org.firstinspires.ftc.teamcode.subsystems.constants;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -18,11 +23,9 @@ public class drivetrain extends subsystem{
     DcMotor frontLeft,frontRight,backLeft,backRight;
     private BNO055IMU imu;
     private Orientation lastAngles = new Orientation();
-    double globalAngle;
-    public double power = .30;
-    double correction;
-    double diameter=4;
-    int motor_ratio=40, gear_ratio=1;
+    private constants c = new constants();
+    double globalAngle, correction;
+    double power = c.power;
 
     public drivetrain(HardwareMap hwMap) {
         frontLeft = hwMap.get(DcMotor.class, "leftFront");
@@ -135,9 +138,7 @@ public class drivetrain extends subsystem{
     }
 
     private int inTT (double inches){
-        // to calculate distance
-        // assuming its a hall effect encoder then *28 accounts for the rises and falls for the channels
-        return (int) Math.round(((motor_ratio*gear_ratio * 28)/(diameter*Math.PI))*inches);
+        return (int) round(c.conversion_factor*inches);
     }
 
     public void drive (String direction, double inches, double speed){
@@ -212,7 +213,7 @@ public class drivetrain extends subsystem{
         }
     }
 
-    private void resetAngle() {
+    public void resetAngle() {
         lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         globalAngle = 0;
     }
@@ -248,7 +249,7 @@ public class drivetrain extends subsystem{
         return correction;
     }
 
-    public void rotateTest(int degrees, double power) {
+    public void rotateP(int degrees, double power) {
         double  lp, rp; // left and right power
 
         // restart imu movement tracking.
@@ -287,8 +288,8 @@ public class drivetrain extends subsystem{
     }
 
     public void maintainHeading(String direction) {
+        // call resetAngle() prior to calling this function
         // must be called in a loop where it loops until a condition is met
-        // see if we are moving in a straight line and if not return a power correction value
         // power adjustment, + is adjust left - is adjust right
         // add correction for counterclock subtract for clock
         // for diagonals it might be wise to add correction to the 0 power wheels (+ for right - for left)
@@ -351,30 +352,24 @@ public class drivetrain extends subsystem{
     }
 
     public void maintainHeading() {
-        // might need to add a booster to correction
+        // call resetAngle() prior to calling this function
+        // must be called in a loop where it loops until a condition is met
         correction = checkDirection();
         SP("l", (-correction));
         SP("r", (correction));
     }
 
     public void rotatePID(String direction, double degrees) {
-        double angle,target,currentError,previousError,accumulatedError,derivative,P,I,D,p;
+        resetAngle();
+        double angle,target,currentError,previousError,accumulatedError,derivative,P,I,D,p; //p is power of adjustment
         previousError=accumulatedError=0;
 
-        P = 0; // increase until the robot oscillates
-        I = 0; // once p is "found" set this to around half
-        D = 0; // increase this to prevent overshoot
-
-        // basic rules for tuning
-        // p means youre going fast the further you are from your target
-        // i means if you hit a rough patch or arent getting to speed we increase power over time to get there
-        // d means depending on how big of a spike from the rate of change, we slow down to prevent overshoot
-        // the larger the spike the more it dampens, so if youve been slow on a bump and i gets high enough to pass the bump
-        // then all of a sudden in one loop youve moved 4x the degrees you normally do, d will spike up to slow you down so you dont overshoot
+        P = c.P;
+        I = c.I;
+        D = c.D;
 
         boolean reachedPosition = false;
         // degrees pos and neg may need to be switched
-        // sets the target to the direction
         switch (direction) {
             case"l":
                 target = degrees;
@@ -409,4 +404,126 @@ public class drivetrain extends subsystem{
             default: return;
         }
     }
+
+    public double maintainHeadingPID(String direction, double previousError){
+        // call resetAngle() prior to calling this function
+        // this function must be called in a loop where it loops until a condition is met
+        // power adjustment, + is adjust left - is adjust right
+        // add correction for counterclock subtract for clock
+        // for diagonals it might be wise to add correction to the 0 power wheels (+ for right - for left)
+        // alternatively it might be wise to instead multiply the correction of the wheels in use
+        double angle,currentError,accumulatedError,derivative,P,I,D,p; //p is power of adjustment
+        accumulatedError=0;
+
+        P = c.P;
+        I = c.I;
+        D = c.D;
+
+        // basic rules for tuning
+        // p means youre going fast the further you are from your target
+        // i means if you hit a rough patch or arent getting to speed we increase power over time to get there
+        // d means depending on how big of a spike from the rate of change, we slow down to prevent overshoot
+        // the larger the spike the more it dampens, so if youve been slow on a bump and i gets high enough to pass the bump
+        // then all of a sudden in one loop youve moved 4x the degrees you normally do, d will spike up to slow you down so you dont overshoot
+
+        // degrees pos and neg may need to be switched
+        // we have to return a value since it needs to be a closed loop
+        switch (direction) {
+            case"f":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("l", power - p);
+                SP("r", power + p);
+                return previousError;
+            case"b":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("l", -power - p);
+                SP("r", -power + p);
+                return previousError;
+            case"l":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("fl",-power + p);
+                SP("fr",power + p);
+                SP("bl",power - p);
+                SP("br",-power - p);
+                return previousError;
+            case"r":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("fl",power - p);
+                SP("fr",-power - p);
+                SP("bl",-power + p);
+                SP("br",power + p);
+                return previousError;
+            case"fr":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("fl",power - p);
+                SP("fr",0);
+                SP("bl",0);
+                SP("br",power + p);
+                return previousError;
+            case"bl":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("fl",-power - p);
+                SP("fr",0);
+                SP("bl",0);
+                SP("br",-power + p);
+                return previousError;
+            case"fl":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("fl",0);
+                SP("fr",power + p);
+                SP("bl",power - p);
+                SP("br",0);
+                return previousError;
+            case"br":
+                angle = getAngle();
+                currentError = 0 - angle;
+                accumulatedError += currentError;
+                derivative = currentError - previousError;
+                previousError = currentError;
+                p = P * currentError + I * accumulatedError + D * derivative;
+                SP("fl",0);
+                SP("fr",-power + p);
+                SP("bl",-power - p);
+                SP("br",0);
+                return previousError;
+            default: return previousError;
+        }
+    }
+
+
 }
