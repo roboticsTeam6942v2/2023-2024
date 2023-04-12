@@ -1,11 +1,11 @@
-package org.firstinspires.ftc.teamcode.opmodes;
+package org.firstinspires.ftc.teamcode.opmodes.Samples;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.system.testy;
 
 @TeleOp(name="subsystem teleop",group="tests")
-public class subsystemsTestTele extends LinearOpMode {
+public class sampleTele extends LinearOpMode {
     @Override
     public void runOpMode() {
         // initializes and hardware-maps robot ps.you can name the robot anything
@@ -20,9 +20,11 @@ public class subsystemsTestTele extends LinearOpMode {
             robot.lift.RTP();
             robot.lift.SP(1);
 
+            robot.lift.determinePosition();
+
             // allow you to increase and decrease lift to predetermined levels
-            if(gamepad1.y){robot.lift.addPosition();}
-            if(gamepad1.a){robot.lift.subPosition();}
+            if(gamepad1.y){robot.lift.addPrePosition();}
+            if(gamepad1.a){robot.lift.subPrePosition();}
 
         }
     }
